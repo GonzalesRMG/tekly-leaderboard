@@ -36,8 +36,8 @@ function SeasonsListPage() {
       ) : (
         <ul style={{ lineHeight: 1.8 }}>
           {seasons.map((s) => (
-            <li key={s.id}>
-              <Link to={`/seasons/${s.id}`}>{s.name || s.title || `Season ${s.id}`}</Link>
+            <li key={s.season_id || s.id}>
+              <Link to={`/seasons/${s.season_id || s.id}`}>{s.name || s.title || `Season ${s.season_id || s.id}`}</Link>
             </li>
           ))}
         </ul>

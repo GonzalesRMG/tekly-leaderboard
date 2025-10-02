@@ -21,15 +21,26 @@ pool.connect()
   .catch((err) => console.error('Database connection error:', err.stack));
 
 module.exports = pool;
+  
 
 const express = require('express');
 const cors = require('cors');
 
 const app = express();
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT || 5050;
 
-app.use(cors({ origin: 'http://localhost:3000' }));
+// Middleware to log incoming requests for debugging
+app.use((req, res, next) => {
+    console.log("Incoming request:", req.method, req.url, req.headers);
+    next();
+  });
+
+app.use(cors());
 app.use(express.json());
+
+// Simple health check endpoint
+app.get("/ping", (req, res) => res.send("pong"));
+
 
 // GET /api/racers
 app.get('/api/racers', async (req, res) => {
@@ -149,6 +160,17 @@ app.delete('/api/classes/:id', async (req, res) => {
     res.json({ message: 'Class deleted successfully' });
   } catch (err) {
     console.error(err);
+    res.status(500).send('Server error');
+  }
+});
+
+// GET /api/cars
+app.get('/api/cars', async (req, res) => {
+  try {
+    const result = await pool.query('SELECT * FROM Car');
+    res.json(result.rows);
+  } catch (err) {
+    console.error('Error fetching cars:', err);
     res.status(500).send('Server error');
   }
 });
@@ -313,6 +335,28 @@ app.put('/api/season-participation/:id', async (req, res) => {
   }
 });
 
+// GET /api/season-participation?season_id=123
+app.get('/api/season-participation', async (req, res) => {
+  const { season_id } = req.query;
+  if (!season_id) return res.status(400).send('season_id is required');
+  try {
+    const q = `
+      SELECT sp.participation_id, sp.racer_id, sp.season_id, sp.class_id,
+             r.steam_name, r.ac_name, cl.class_name
+      FROM SeasonParticipation sp
+      JOIN Racer r   ON sp.racer_id = r.racer_id
+      JOIN CarClass cl ON sp.class_id = cl.class_id
+      WHERE sp.season_id = $1
+      ORDER BY r.steam_name ASC
+    `;
+    const result = await pool.query(q, [season_id]);
+    res.json(result.rows);
+  } catch (err) {
+    console.error('Error fetching season participation:', err);
+    res.status(500).send('Server error');
+  }
+});
+
 // Validation: Ensure car belongs to the class for the season
 async function validateCarClass(car_id, class_id) {
   const car = await pool.query('SELECT * FROM Car WHERE car_id = $1 AND class_id = $2', [car_id, class_id]);
@@ -359,11 +403,44 @@ app.post('/api/race-results', async (req, res) => {
 // GET /api/race-results/:race_id
 app.get('/api/race-results/:race_id', async (req, res) => {
   const { race_id } = req.params;
+  console.log(`Fetching race results for race_id: ${race_id}`);
   try {
-    const result = await pool.query('SELECT * FROM RaceResult WHERE race_id = $1', [race_id]);
+    const query = `
+      SELECT
+        rr.result_id,
+        rr.race_id,
+        rr.participation_id,
+        rr.car_id,
+        rr.position,
+        rr.points,
+        rr.fastest_lap,
+        rr.created_at,
+        -- racer
+        r.racer_id,
+        r.steam_name AS racer_name,
+        r.ac_name   AS racer_ac_name,
+        r.rank      AS racer_rank,
+        -- car & class
+        c.car_name,
+        c.class_id,
+        cl.class_name,
+        -- race meta
+        ra.track_name   AS race_track_name,
+        ra.race_date    AS race_date,
+        ra.is_double_points
+      FROM RaceResult rr
+      JOIN SeasonParticipation sp ON rr.participation_id = sp.participation_id
+      JOIN Racer r               ON sp.racer_id = r.racer_id
+      JOIN Car c                 ON rr.car_id = c.car_id
+      JOIN CarClass cl           ON c.class_id = cl.class_id
+      JOIN Race ra               ON rr.race_id = ra.race_id
+      WHERE rr.race_id = $1
+    `;
+    const result = await pool.query(query, [race_id]);
+    console.log('Fetched race results count:', result.rows.length);
     res.json(result.rows);
   } catch (err) {
-    console.error(err);
+    console.error('Error fetching race results:', err);
     res.status(500).send('Server error');
   }
 });

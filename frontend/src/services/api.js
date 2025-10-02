@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_BASE_URL = 'http://localhost:5000/api';
+const API_BASE_URL = 'http://localhost:5050/api';
 
 const api = axios.create({
   baseURL: API_BASE_URL,
@@ -35,5 +35,7 @@ export const getRaceResults = (raceId) => api.get(`/race-results/${raceId}`);
 export const createRaceResult = (data) => api.post('/race-results', data);
 export const updateRaceResult = (id, data) => api.put(`/race-results/${id}`, data);
 export const deleteRaceResult = (id) => api.delete(`/race-results/${id}`);
+
+export const getSeasonParticipation = (seasonId) => api.get('/season-participation', { params: { season_id: seasonId } });
 
 export default api;

@@ -21,3 +21,49 @@ pool.connect()
   .catch((err) => console.error('Database connection error:', err.stack));
 
 module.exports = pool;
+
+const express = require('express');
+const cors = require('cors');
+
+const app = express();
+const PORT = process.env.PORT || 3000;
+
+app.use(cors());
+app.use(express.json());
+
+// GET /api/racers
+app.get('/api/racers', async (req, res) => {
+  try {
+    const result = await pool.query('SELECT * FROM Racer');
+    res.json(result.rows);
+  } catch (err) {
+    console.error(err);
+    res.status(500).send('Server error');
+  }
+});
+
+// GET /api/classes
+app.get('/api/classes', async (req, res) => {
+  try {
+    const result = await pool.query('SELECT * FROM CarClass');
+    res.json(result.rows);
+  } catch (err) {
+    console.error(err);
+    res.status(500).send('Server error');
+  }
+});
+
+// GET /api/seasons
+app.get('/api/seasons', async (req, res) => {
+  try {
+    const result = await pool.query('SELECT * FROM Season');
+    res.json(result.rows);
+  } catch (err) {
+    console.error(err);
+    res.status(500).send('Server error');
+  }
+});
+
+app.listen(PORT, () => {
+  console.log(`Server is running on port ${PORT}`);
+});

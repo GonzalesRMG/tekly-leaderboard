@@ -4,7 +4,9 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "db:reset": "psql -d racing_league -c \"DROP SCHEMA public CASCADE; CREATE SCHEMA public;\" && psql -d racing_league -f ../db/schema.sql && psql -d racing_league -f ../db/seed.sql",
+    "db:reseed": "psql -d racing_league -f ../db/seed.sql"
   },
   "keywords": [],
   "author": "",

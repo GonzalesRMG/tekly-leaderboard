@@ -5,14 +5,14 @@ function PublicLayout() {
   const linkStyle = ({ isActive }) => ({
     marginRight: 12,
     textDecoration: 'none',
-    color: isActive ? '#1976d2' : '#333',
+    color: isActive ? '#38bdf8' : '#b3b9c4', // adjusted for dark background
     fontWeight: isActive ? '600' : '500',
   });
 
   return (
     <div>
-      <header style={{ padding: '12px 16px', borderBottom: '1px solid #eee', display: 'flex', alignItems: 'center', gap: 16 }}>
-        <Link to="/" style={{ fontWeight: 700, color: '#111', textDecoration: 'none' }}>Tekly Leaderboard</Link>
+      <header style={{ padding: '12px 16px', borderBottom: '1px solid #222', display: 'flex', alignItems: 'center', gap: 16, background: '#000' }}>
+        <Link to="/" style={{ fontWeight: 700, color: 'var(--color-text)', textDecoration: 'none' }}>Tekly Leaderboard</Link>
         <nav style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center' }}>
           <NavLink to="/" end style={linkStyle}>Seasons</NavLink>
         </nav>
